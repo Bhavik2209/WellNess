@@ -17,6 +17,31 @@ import streamlit as st
 import extra_streamlit_components as stx
 from datetime import datetime, timedelta
 
+GOOGLE_API_KEY = st.secrets["general"]["GOOGLE_API_KEY"]
+ADMIN_PASSWORD = st.secrets["general"]["ADMIN_PASSWORD"]
+
+PDF_UPLOAD_COUNT_FILE = "pdf_upload_count.json"
+
+
+def load_pdf_upload_count():
+    if os.path.exists(PDF_UPLOAD_COUNT_FILE):
+        with open(PDF_UPLOAD_COUNT_FILE, "r") as f:
+            data = json.load(f)
+            return data.get("count", 0)
+    else:
+        # Initialize the file if it does not exist
+        save_pdf_upload_count(0)
+        return 0
+
+def save_pdf_upload_count(count):
+    with open(PDF_UPLOAD_COUNT_FILE, "w") as f:
+        json.dump({"count": count}, f)
+
+def increment_pdf_upload_count():
+    count = load_pdf_upload_count()
+    count += 1
+    save_pdf_upload_count(count)
+
 def get_manager():
     return stx.CookieManager()
 
@@ -39,9 +64,6 @@ def get_auth_cookie():
 
 
 
-# Load environment variables
-load_dotenv()
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 genai.configure(api_key=GOOGLE_API_KEY)
 
 # Paths for user data and processed data
@@ -105,25 +127,28 @@ def get_vector_store(text_chunks):
 def get_extraction_chain(language):
     if language == "Hindi":
         prompt_template = """
-        निम्नलिखित पाठ से सबसे महत्वपूर्ण शब्द निकालें और प्रत्येक शब्द को सरल शब्दों में समझाएं।
+नीचे दिए गए पाठ से सबसे महत्वपूर्ण शब्दों की पहचान करें और उन्हें निम्नलिखित प्रारूप में समझाएं: 'महत्वपूर्ण शब्द(रिपोर्ट भाषा) : स्पष्टीकरण(चयनित भाषा)'। यदि सामग्री एक चिकित्सा रिपोर्ट से संबंधित नहीं लगती है, तो कृपया यह लिखें: 'यह रिपोर्ट एक चिकित्सा रिपोर्ट नहीं लगती है।'
 
-        पाठ:\n{context}\n
-        महत्वपूर्ण शब्द और व्याख्याएं:
-        """
+सामग्री:\n{context}\n
+महत्वपूर्ण शब्द और स्पष्टीकरण:
+"""
+
     elif language == "Gujarati":
         prompt_template = """
-        નીચેના લખાણમાંથી સૌથી મહત્વપૂર્ણ શબ્દો કાઢો અને દરેક શબ્દને સરળ શબ્દોમાં સમજાવો.
+આ નીચે આપેલ લખાણમાંથી સૌથી મહત્વપૂર્ણ શબ્દોની ઓળખ કરો અને તેમને નીચેના ફોર્મેટમાં સમજાવો: 'મહત્વપૂર્ણ શબ્દ(અહેવાલની ભાષા) : સમજાણું(પસંદ કરેલી ભાષા)'।'
 
-        લખાણ:\n{context}\n
-        મહત્વપૂર્ણ શબ્દો અને વ્યાખ્યાઓ:
-        """
+સામગ્રી:\n{context}\n
+મહત્વપૂર્ણ શબ્દો અને સમજણું:
+"""
+
     else:  # Default to English
         prompt_template = """
-        Extract the most important terms from the following text and explain each term in simple words.
-        
-        Text:\n{context}\n
-        Important Terms and Explanations:
-        """
+Identify the most important terms from the following text and provide explanations in the specified format: 'imp word(report language) : explanation(selected language)'.'
+
+Content:\n{context}\n
+Important Terms and Explanations:
+"""
+
         
     prompt = PromptTemplate(template=prompt_template, input_variables=["context"])
     model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
@@ -247,19 +272,6 @@ def get_tips(summary, language):
 
 
 
-def create_pdf(text, filename):
-    pdf = FPDF()
-    pdf.add_page()
-    
-    # Use a built-in Unicode font
-    pdf.add_font("NotoSans", "", uni=True)
-    pdf.set_font("NotoSans", size=12)
-    
-    # Encode the text as UTF-8
-    encoded_text = text.encode('utf-8', errors='ignore').decode('utf-8')
-    
-    pdf.multi_cell(0, 10, encoded_text)
-    pdf.output(filename)
 
 def load_user_emails():
     user_data = load_user_data()
@@ -307,12 +319,14 @@ def sign_up():
 
 def view_users():
     st.title("User Management")
-
-    st.write("### Registered Users")
-    user_data = load_user_data()
-    
-    for i in user_data.keys():
-        st.write(i)
+    admin_password = st.text_input("Password", type="password")
+    if admin_password == ADMIN_PASSWORD:
+        st.write(f"### Total PDF Uploads: {load_pdf_upload_count()}")
+        st.write("### Registered Users")
+        user_data = load_user_data()
+        
+        for i in user_data.keys():
+            st.write(i)
         
 
 def main():
@@ -322,6 +336,7 @@ def main():
         layout="wide"
     )
     st.image("logo.png", use_column_width=True)
+    
     # Check for authentication cookie
     auth_email = get_auth_cookie()
     if auth_email:
@@ -353,14 +368,13 @@ def main():
         # Language selection
         language = st.sidebar.selectbox("Select Language", ["English", "Hindi", "Gujarati"])
         
-
-        
-        # Language selection
-
-        
+        # PDF Upload
         pdf_docs = st.file_uploader("Upload your PDF Files", accept_multiple_files=True)
         
         if pdf_docs:
+            # Increment the PDF upload count
+            increment_pdf_upload_count()
+
             st.sidebar.write("### PDF Upload Status: Files Uploaded")
             st.sidebar.write("### Options")
             selected_option = st.sidebar.radio(
@@ -397,9 +411,7 @@ def main():
                         
                         st.success("Processing complete!")
 
-                        # Download buttons
-                        st.write("### Download")
-                        st.button("Download Summary", on_click=lambda: create_pdf("\n".join(summaries), "summary.pdf"))
+                       
             elif selected_option == "Important Terms":
                 if st.button("Generate Important Terms"):
                     with st.spinner("Processing..."):
@@ -420,9 +432,7 @@ def main():
                         
                         st.success("Processing complete!")
 
-                        # Download button
-                        st.write("### Download")
-                        st.button("Download Important Terms", on_click=lambda: create_pdf("\n".join(explanations), "important_terms.pdf"))
+                       
 
             elif selected_option == "Chatbot":
                 if pdf_docs:
@@ -442,6 +452,9 @@ def main():
                                 st.write(answer)
                 else:
                     st.warning("Please upload a PDF document first.")
+        
+        
+        
 
 if __name__ == "__main__":
     main()
