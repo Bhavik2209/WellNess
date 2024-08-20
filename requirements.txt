@@ -1,0 +1,9 @@
+streamlit==1.31.1
+PyPDF2==3.0.1
+langchain==0.2.12
+langchain-google-genai==1.0.8
+google-generativeai==0.7.2
+FAISS==1.8.0
+dotenv==1.0.1
+fpdf==1.7.2
+extra-streamlit-components==0.1.71
