@@ -17,8 +17,8 @@ import streamlit as st
 import extra_streamlit_components as stx
 from datetime import datetime, timedelta
 
-GOOGLE_API_KEY = st.secrets["general"]["GOOGLE_API_KEY"]
-ADMIN_PASSWORD = st.secrets["general"]["ADMIN_PASSWORD"]
+GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+ADMIN_PASSWORD = st.secrets["ADMIN_PASSWORD"]
 
 PDF_UPLOAD_COUNT_FILE = "pdf_upload_count.json"
 
@@ -64,7 +64,7 @@ def get_auth_cookie():
 
 
 
-genai.configure(google_api_key=GOOGLE_API_KEY)
+genai.configure(api_key=GOOGLE_API_KEY)
 
 # Paths for user data and processed data
 USER_DATA_FILE = "user_data.json"
@@ -116,7 +116,7 @@ def get_text_chunks(text):
     return chunks
 
 def get_vector_store(text_chunks):
-    embeddings = GoogleGenerativeAIEmbeddings(google_api_key=GOOGLE_API_KEY, model="models/embedding-001")
+    embeddings = GoogleGenerativeAIEmbeddings(api_key=GOOGLE_API_KEY, model="models/embedding-001")
     vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
     try:
         vector_store.save_local("faiss_index")
