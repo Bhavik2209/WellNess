@@ -143,7 +143,7 @@ def get_extraction_chain(language):
 
     else:  # Default to English
         prompt_template = """
-Identify the most important terms from the following text and provide explanations in the specified format: 'imp word(report language) : explanation(selected language)'.'
+Identify the most important terms from the following text and provide explanations in the specified format: 'imp word(report language) : explanation(selected language)'. and in the proper format of new line.'
 
 Content:\n{context}\n
 Important Terms and Explanations:
