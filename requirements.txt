@@ -3,7 +3,6 @@ PyPDF2
 langchain
 langchain-google-genai
 google-generativeai
-FAISS
-dotenv
+python-dotenv
 fpdf
 extra-streamlit-components
