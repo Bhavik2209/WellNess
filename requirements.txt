@@ -7,3 +7,4 @@ python-dotenv
 fpdf
 extra-streamlit-components
 langchain-community
+faiss-cpu
