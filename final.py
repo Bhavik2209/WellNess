@@ -280,8 +280,7 @@ def load_user_emails():
 
 def login():
     st.title("Login")
-    email_options = [""] + load_user_emails()
-    email = st.selectbox("Email", email_options)
+    email = st.text_input("Email", type="default")
     password = st.text_input("Password", type="password")
     
     if st.button("Login"):
