@@ -384,7 +384,7 @@ def main():
             )
 
            if selected_option == "Summary and Tips":
-                if st.button("Generate Summary and Tips"):
+               if st.button("Generate Summary and Tips"):
                     with st.spinner("Processing..."):
                         raw_text = get_pdf_text(pdf_docs)
                         st.write(f"Raw Text: {raw_text[:1000]}")  # Display part of raw text for debugging
@@ -421,6 +421,7 @@ def main():
                         st.success("Processing complete!")
 
 
+                
                        
             elif selected_option == "Important Terms":
                 if st.button("Generate Important Terms"):
