@@ -107,14 +107,14 @@ def get_pdf_text(pdf_docs):
     for pdf in pdf_docs:
         pdf_reader = PdfReader(pdf)
         for page in pdf_reader.pages:
-            text += page.extract_text()
+            text += page.extract_text() or ""  # Ensure it handles None values
     return text
+
 
 def get_text_chunks(text):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
     chunks = text_splitter.split_text(text)
     return chunks
-
 
 def get_vector_store(text_chunks):
     embeddings = GoogleGenerativeAIEmbeddings(api_key=GOOGLE_API_KEY, model="models/embedding-001")
@@ -123,7 +123,10 @@ def get_vector_store(text_chunks):
         vector_store.save_local("faiss_index")
     except Exception as e:
         st.write(f"Failed to save FAISS index: {e}")
-
+def test_summarization(text_chunk):
+    chain = get_summarization_chain("English")  # Use your preferred language
+    response = chain.run({"context": text_chunk})
+    st.write(f"Test Summarization: {response}")
 
 def get_extraction_chain(language):
     if language == "Hindi":
@@ -380,33 +383,41 @@ def main():
                 ["Summary and Tips", "Important Terms", "Chatbot"]
             )
 
-            if selected_option == "Summary and Tips":
+           if selected_option == "Summary and Tips":
                 if st.button("Generate Summary and Tips"):
                     with st.spinner("Processing..."):
                         raw_text = get_pdf_text(pdf_docs)
+                        st.write(f"Raw Text: {raw_text[:1000]}")  # Display part of raw text for debugging
+            
                         text_chunks = get_text_chunks(raw_text)
+                        st.write(f"Text Chunks: {text_chunks[:5]}")  # Display first 5 chunks
+            
                         get_vector_store(text_chunks)  # Save chunks to vector store
             
-                        # Display summaries incrementally
-                        st.write("### Summary")
-                        summaries_placeholder = st.empty()
+                        # Generate summaries
                         summaries = []
                         for chunk in text_chunks:
                             chunk_summaries = summarize_text_chunks([chunk], language)
-                            for summary in chunk_summaries:
-                                summaries_placeholder.write(summary)
-                                summaries.extend(chunk_summaries)
+                            summaries.extend(chunk_summaries)
+                        
+                        st.write("### Summary")
+                        if summaries:
+                            for summary in summaries:
+                                st.write(summary)
+                        else:
+                            st.write("No summaries available.")
             
-                        # Display tips incrementally
-                        st.write("### Tips Based on Summary")
-                        tips_placeholder = st.empty()
+                        # Combine summaries and generate tips
                         summaries_text = " ".join(summaries)
-                        tips = get_tips(summaries_text, language)
-                        tips_placeholder.write(tips)
-                        
-                        # Save the processed data for download
+                        st.write("### Tips Based on Summary")
+                        if summaries_text.strip():
+                            tips = get_tips(summaries_text, language)
+                            st.write(tips)
+                        else:
+                            st.write("No summaries available to generate tips.")
+            
+                        # Save processed data
                         save_processed_data({"summaries": summaries, "tips": tips})
-                        
                         st.success("Processing complete!")
 
 
