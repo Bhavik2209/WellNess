@@ -120,9 +120,9 @@ def get_vector_store(text_chunks):
     vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
     try:
         vector_store.save_local("faiss_index")
-        
     except Exception as e:
         st.write(f"Failed to save FAISS index: {e}")
+
 
 def get_extraction_chain(language):
     if language == "Hindi":
@@ -166,7 +166,7 @@ def extract_and_explain(text_chunks, language):
 def get_summarization_chain(language):
     if language == "Hindi":
         prompt_template = """
-        निम्नलिखित पाठ को संक्षेप में और हिंदी में संक्षेपित करें।
+        निम्नलिखित पाठ को संक्षेप में और हिंदी में संक्षेपित करें.
         
         पाठ:\n{context}\n
         संक्षेप:
@@ -188,6 +188,7 @@ def get_summarization_chain(language):
     chain = LLMChain(llm=model, prompt=prompt)
     return chain
 
+
 def summarize_text_chunks(text_chunks, language):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     vector_store = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
@@ -198,6 +199,7 @@ def summarize_text_chunks(text_chunks, language):
         response = chain.run({"context": chunk})
         summaries.append(response)
     return summaries
+
 
 def get_tips_chain(language):
     if language == "Hindi":
@@ -383,7 +385,7 @@ def main():
                         raw_text = get_pdf_text(pdf_docs)
                         text_chunks = get_text_chunks(raw_text)
                         get_vector_store(text_chunks)  # Save chunks to vector store
-
+            
                         # Display summaries incrementally
                         st.write("### Summary")
                         summaries_placeholder = st.empty()
@@ -393,7 +395,7 @@ def main():
                             for summary in chunk_summaries:
                                 summaries_placeholder.write(summary)
                                 summaries.extend(chunk_summaries)
-
+            
                         # Display tips incrementally
                         st.write("### Tips Based on Summary")
                         tips_placeholder = st.empty()
@@ -405,6 +407,7 @@ def main():
                         save_processed_data({"summaries": summaries, "tips": tips})
                         
                         st.success("Processing complete!")
+
 
                        
             elif selected_option == "Important Terms":
