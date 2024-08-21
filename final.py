@@ -115,6 +115,7 @@ def get_text_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
+
 def get_vector_store(text_chunks):
     embeddings = GoogleGenerativeAIEmbeddings(api_key=GOOGLE_API_KEY, model="models/embedding-001")
     vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
