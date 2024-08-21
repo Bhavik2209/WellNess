@@ -127,7 +127,7 @@ def get_vector_store(text_chunks):
 def get_extraction_chain(language):
     if language == "Hindi":
         prompt_template = """
-नीचे दिए गए पाठ से सबसे महत्वपूर्ण शब्दों की पहचान करें और उन्हें निम्नलिखित प्रारूप में समझाएं: 'महत्वपूर्ण शब्द(रिपोर्ट भाषा) : स्पष्टीकरण(चयनित भाषा)'। if you feel that this is an medical report or any document related to medical just then just go with that note that there might be medical report or document which does not feel like that.'
+नीचे दिए गए पाठ से सबसे महत्वपूर्ण शब्दों की पहचान करें और उन्हें निम्नलिखित प्रारूप में समझाएं: 'महत्वपूर्ण शब्द(रिपोर्ट भाषा) : स्पष्टीकरण(चयनित भाषा)'।'
 
 सामग्री:\n{context}\n
 महत्वपूर्ण शब्द और स्पष्टीकरण:
@@ -135,7 +135,7 @@ def get_extraction_chain(language):
 
     elif language == "Gujarati":
         prompt_template = """
-આ નીચે આપેલ લખાણમાંથી સૌથી મહત્વપૂર્ણ શબ્દોની ઓળખ કરો અને તેમને નીચેના ફોર્મેટમાં સમજાવો: 'મહત્વપૂર્ણ શબ્દ(અહેવાલની ભાષા) : સમજાણું(પસંદ કરેલી ભાષા)'। if you feel that this is an medical report or any document related to medical just then just go with that note that there might be medical report or document which does not feel like that.'
+આ નીચે આપેલ લખાણમાંથી સૌથી મહત્વપૂર્ણ શબ્દોની ઓળખ કરો અને તેમને નીચેના ફોર્મેટમાં સમજાવો: 'મહત્વપૂર્ણ શબ્દ(અહેવાલની ભાષા) : સમજાણું(પસંદ કરેલી ભાષા)'। '
 
 સામગ્રી:\n{context}\n
 મહત્વપૂર્ણ શબ્દો અને સમજણું:
@@ -143,7 +143,7 @@ def get_extraction_chain(language):
 
     else:  # Default to English
         prompt_template = """
-Identify the most important terms from the following text and provide explanations in the simple words. if you feel that this is an medical report or any document related to medical just then just go with that note that there might be medical report or document which does not feel like that.'
+Identify the most important terms from the following text and provide explanations in the simple words.'
 
 Content:\n{context}\n
 Important Terms and Explanations:
@@ -166,20 +166,20 @@ def extract_and_explain(text_chunks, language):
 def get_summarization_chain(language):
     if language == "Hindi":
         prompt_template = """
-        निम्नलिखित पाठ को संक्षेप में और हिंदी में संक्षेपित करें।if you feel that this is an medical report or any document related to medical just then just go with that note that there might be medical report or document which does not feel like that.
+        निम्नलिखित पाठ को संक्षेप में और हिंदी में संक्षेपित करें।
         
         पाठ:\n{context}\n
         संक्षेप:
         """
     elif language == "Gujarati":
         prompt_template = """
-        નીચેના લખાણને સંક્ષેપમાં અને ગુજરાતી ભાષામાં સંક્ષિપ્ત કરો.if you feel that this is an medical report or any document related to medical just then just go with that note that there might be medical report or document which does not feel like that.
+        નીચેના લખાણને સંક્ષેપમાં અને ગુજરાતી ભાષામાં સંક્ષિપ્ત કરો.
         લખાણ:\n{context}\n
         સંક્ષેપ:
         """
     else:  # Default to English
         prompt_template = """
-        Summarize the following text in a concise manner and in English.if you feel that this is an medical report or any document related to medical just then just go with that note that there might be medical report or document which does not feel like that.
+        Summarize the following text in a concise manner and in English.
         Summary:
         """
     
@@ -202,20 +202,20 @@ def summarize_text_chunks(text_chunks, language):
 def get_tips_chain(language):
     if language == "Hindi":
         prompt_template = """
-        निम्नलिखित संक्षेप के आधार पर व्यावहारिक सुझाव या सलाह प्रदान करें। if you feel that this is an medical report or any document related to medical just then just go with that note that there might be medical report or document which does not feel like that.
+        निम्नलिखित संक्षेप के आधार पर व्यावहारिक सुझाव या सलाह प्रदान करें। 
         संक्षेप:\n{context}\n
         सुझाव:
         """
     elif language == "Gujarati":
         prompt_template = """
-        નીચેના સંક્ષેપના આધારે વ્યવહારૂ સલાહ અથવા સૂચનો આપો. if you feel that this is an medical report or any document related to medical just then just go with that note that there might be medical report or document which does not feel like that.
+        નીચેના સંક્ષેપના આધારે વ્યવહારૂ સલાહ અથવા સૂચનો આપો. 
         
         સંક્ષેપ:\n{context}\n
         સૂચનો:
         """
     else:  # Default to English
         prompt_template = """
-        Provide practical tips or advice based on the following summary. if you feel that this is an medical report or any document related to medical just then just go with that note that there might be medical report or document which does not feel like that.
+        Provide practical tips or advice based on the following summary.
         
         Summary:\n{context}\n
         Tips:
