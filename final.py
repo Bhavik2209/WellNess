@@ -107,9 +107,8 @@ def get_pdf_text(pdf_docs):
     for pdf in pdf_docs:
         pdf_reader = PdfReader(pdf)
         for page in pdf_reader.pages:
-            text += page.extract_text() or ""  # Ensure it handles None values
+            text += page.extract_text()
     return text
-
 
 def get_text_chunks(text):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
@@ -121,17 +120,14 @@ def get_vector_store(text_chunks):
     vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
     try:
         vector_store.save_local("faiss_index")
+        
     except Exception as e:
         st.write(f"Failed to save FAISS index: {e}")
-def test_summarization(text_chunk):
-    chain = get_summarization_chain("English")  # Use your preferred language
-    response = chain.run({"context": text_chunk})
-    st.write(f"Test Summarization: {response}")
 
 def get_extraction_chain(language):
     if language == "Hindi":
         prompt_template = """
-नीचे दिए गए पाठ से सबसे महत्वपूर्ण शब्दों की पहचान करें और उन्हें निम्नलिखित प्रारूप में समझाएं: 'महत्वपूर्ण शब्द(रिपोर्ट भाषा) : स्पष्टीकरण(चयनित भाषा)'।'
+नीचे दिए गए पाठ से सबसे महत्वपूर्ण शब्दों की पहचान करें और उन्हें निम्नलिखित प्रारूप में समझाएं: 'महत्वपूर्ण शब्द(रिपोर्ट भाषा) : स्पष्टीकरण(चयनित भाषा)'। यदि सामग्री एक चिकित्सा रिपोर्ट से संबंधित नहीं लगती है, तो कृपया यह लिखें: 'यह रिपोर्ट एक चिकित्सा रिपोर्ट नहीं लगती है।'
 
 सामग्री:\n{context}\n
 महत्वपूर्ण शब्द और स्पष्टीकरण:
@@ -139,7 +135,7 @@ def get_extraction_chain(language):
 
     elif language == "Gujarati":
         prompt_template = """
-આ નીચે આપેલ લખાણમાંથી સૌથી મહત્વપૂર્ણ શબ્દોની ઓળખ કરો અને તેમને નીચેના ફોર્મેટમાં સમજાવો: 'મહત્વપૂર્ણ શબ્દ(અહેવાલની ભાષા) : સમજાણું(પસંદ કરેલી ભાષા)'। '
+આ નીચે આપેલ લખાણમાંથી સૌથી મહત્વપૂર્ણ શબ્દોની ઓળખ કરો અને તેમને નીચેના ફોર્મેટમાં સમજાવો: 'મહત્વપૂર્ણ શબ્દ(અહેવાલની ભાષા) : સમજાણું(પસંદ કરેલી ભાષા)'।'
 
 સામગ્રી:\n{context}\n
 મહત્વપૂર્ણ શબ્દો અને સમજણું:
@@ -147,7 +143,7 @@ def get_extraction_chain(language):
 
     else:  # Default to English
         prompt_template = """
-Identify the most important terms from the following text and provide explanations in the simple words.'
+Identify the most important terms from the following text and provide explanations in the specified format: 'imp word(report language) : explanation(selected language)'.'
 
 Content:\n{context}\n
 Important Terms and Explanations:
@@ -170,7 +166,7 @@ def extract_and_explain(text_chunks, language):
 def get_summarization_chain(language):
     if language == "Hindi":
         prompt_template = """
-        निम्नलिखित पाठ को संक्षेप में और हिंदी में संक्षेपित करें.
+        निम्नलिखित पाठ को संक्षेप में और हिंदी में संक्षेपित करें।
         
         पाठ:\n{context}\n
         संक्षेप:
@@ -178,12 +174,15 @@ def get_summarization_chain(language):
     elif language == "Gujarati":
         prompt_template = """
         નીચેના લખાણને સંક્ષેપમાં અને ગુજરાતી ભાષામાં સંક્ષિપ્ત કરો.
+        
         લખાણ:\n{context}\n
         સંક્ષેપ:
         """
     else:  # Default to English
         prompt_template = """
         Summarize the following text in a concise manner and in English.
+        
+        Text:\n{context}\n
         Summary:
         """
     
@@ -191,7 +190,6 @@ def get_summarization_chain(language):
     model = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.3)
     chain = LLMChain(llm=model, prompt=prompt)
     return chain
-
 
 def summarize_text_chunks(text_chunks, language):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
@@ -204,17 +202,17 @@ def summarize_text_chunks(text_chunks, language):
         summaries.append(response)
     return summaries
 
-
 def get_tips_chain(language):
     if language == "Hindi":
         prompt_template = """
-        निम्नलिखित संक्षेप के आधार पर व्यावहारिक सुझाव या सलाह प्रदान करें। 
+        निम्नलिखित संक्षेप के आधार पर व्यावहारिक सुझाव या सलाह प्रदान करें।
+        
         संक्षेप:\n{context}\n
         सुझाव:
         """
     elif language == "Gujarati":
         prompt_template = """
-        નીચેના સંક્ષેપના આધારે વ્યવહારૂ સલાહ અથવા સૂચનો આપો. 
+        નીચેના સંક્ષેપના આધારે વ્યવહારૂ સલાહ અથવા સૂચનો આપો.
         
         સંક્ષેપ:\n{context}\n
         સૂચનો:
@@ -282,7 +280,8 @@ def load_user_emails():
 
 def login():
     st.title("Login")
-    email = st.text_input("Email", type="default")
+    email_options = [""] + load_user_emails()
+    email = st.selectbox("Email", email_options)
     password = st.text_input("Password", type="password")
     
     if st.button("Login"):
@@ -375,7 +374,6 @@ def main():
         if pdf_docs:
             # Increment the PDF upload count
             increment_pdf_upload_count()
-
             st.sidebar.write("### PDF Upload Status: Files Uploaded")
             st.sidebar.write("### Options")
             selected_option = st.sidebar.radio(
@@ -383,45 +381,35 @@ def main():
                 ["Summary and Tips", "Important Terms", "Chatbot"]
             )
 
-           if selected_option == "Summary and Tips":
-               if st.button("Generate Summary and Tips"):
+            if selected_option == "Summary and Tips":
+                if st.button("Generate Summary and Tips"):
                     with st.spinner("Processing..."):
                         raw_text = get_pdf_text(pdf_docs)
-                        st.write(f"Raw Text: {raw_text[:1000]}")  # Display part of raw text for debugging
-            
                         text_chunks = get_text_chunks(raw_text)
-                        st.write(f"Text Chunks: {text_chunks[:5]}")  # Display first 5 chunks
-            
                         get_vector_store(text_chunks)  # Save chunks to vector store
-            
-                        # Generate summaries
+
+                        # Display summaries incrementally
+                        st.write("### Summary")
+                        summaries_placeholder = st.empty()
                         summaries = []
                         for chunk in text_chunks:
                             chunk_summaries = summarize_text_chunks([chunk], language)
-                            summaries.extend(chunk_summaries)
-                        
-                        st.write("### Summary")
-                        if summaries:
-                            for summary in summaries:
-                                st.write(summary)
-                        else:
-                            st.write("No summaries available.")
-            
-                        # Combine summaries and generate tips
-                        summaries_text = " ".join(summaries)
+                            for summary in chunk_summaries:
+                                summaries_placeholder.write(summary)
+                                summaries.extend(chunk_summaries)
+
+                        # Display tips incrementally
                         st.write("### Tips Based on Summary")
-                        if summaries_text.strip():
-                            tips = get_tips(summaries_text, language)
-                            st.write(tips)
-                        else:
-                            st.write("No summaries available to generate tips.")
-            
-                        # Save processed data
+                        tips_placeholder = st.empty()
+                        summaries_text = " ".join(summaries)
+                        tips = get_tips(summaries_text, language)
+                        tips_placeholder.write(tips)
+                        
+                        # Save the processed data for download
                         save_processed_data({"summaries": summaries, "tips": tips})
+                        
                         st.success("Processing complete!")
 
-
-                
                        
             elif selected_option == "Important Terms":
                 if st.button("Generate Important Terms"):
