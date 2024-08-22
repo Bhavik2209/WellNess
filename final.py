@@ -344,7 +344,10 @@ def main():
         st.session_state["email"] = auth_email
     
     if "authenticated" not in st.session_state or not st.session_state["authenticated"]:
-        choice = st.sidebar.radio("Select an Option", ["Login", "Sign Up", "View Users"], key="auth_choice")
+        st.title("Welcome to Wellness")
+        
+        # Authentication options on the main page
+        choice = st.selectbox("Select an Option", ["Login", "Sign Up", "View Users"], key="auth_choice")
         
         if choice == "Login":
             login()
